@@ -7,14 +7,16 @@ router.get("/:id/tasks", async (req, res) => {
   try {
     const tasks = await db.query(
       `SELECT tasks.*, 
+        users.name AS assigned_to,
         json_agg(
           json_build_object('id', tags.id, 'name', tags.name)
         ) FILTER (WHERE tags.id IS NOT NULL) AS tags
        FROM tasks
        LEFT JOIN task_tags ON tasks.id = task_tags.task_id
        LEFT JOIN tags ON task_tags.tag_id = tags.id
+       LEFT JOIN users ON tasks.assigned_to = users.id
        WHERE tasks.project_id = $1
-       GROUP BY tasks.id`,
+       GROUP BY tasks.id, users.name`,
       [project_id],
     );
     if (tasks.rows.length === 0)
@@ -30,14 +32,16 @@ router.get("/:id/tasks/:taskId", async (req, res) => {
   try {
     const task = await db.query(
       `SELECT tasks.*, 
+        users.name AS assigned_to,
         json_agg(
           json_build_object('id', tags.id, 'name', tags.name)
         ) FILTER (WHERE tags.id IS NOT NULL) AS tags
        FROM tasks
        LEFT JOIN task_tags ON tasks.id = task_tags.task_id
        LEFT JOIN tags ON task_tags.tag_id = tags.id
+       LEFT JOIN users ON tasks.assigned_to = users.id
        WHERE tasks.project_id = $1 AND tasks.id = $2
-       GROUP BY tasks.id`,
+       GROUP BY tasks.id, users.name`,
       [id, taskId],
     );
     if (!task.rows[0])
