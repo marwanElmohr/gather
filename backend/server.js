@@ -21,12 +21,28 @@ app.use("/api/users", require("./routes/users"));
 app.use("/api/clients", require("./routes/clients"));
 app.use("/api/projects", require("./routes/projects"));
 app.use("/api/projects", require("./routes/tasks"));
+app.use("/api/tasks", require("./routes/comments"));
+app.use("/api/projects", require("./routes/members"));
+app.use("/api/tags", require("./routes/tags"));
+app.use("/api/tasks", require("./routes/attachments"));
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
 const port = process.env.PORT || 5000;
+
+app.use((_req, res) => {
+  res.status(404).json({ error: "Route not found." });
+});
+
+app.use((err, _req, res, _next) => {
+  console.error(err.stack);
+  res
+    .status(500)
+    .json({ error: "Internal Server Error.", detail: err.message });
+});
+
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
