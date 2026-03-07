@@ -1,19 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  useDroppable,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-  useSortable,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { DragDropProvider } from "@dnd-kit/react";
+import { useDraggable } from "@dnd-kit/react";
+import { useDroppable } from "@dnd-kit/react";
 import TaskDetailModal from "./TaskDetailModal";
 
 const COLUMNS = ["todo", "in_progress", "blocked", "review", "done"];
@@ -28,9 +17,9 @@ const COLUMN_LABELS = {
 
 const COLUMN_COLORS = {
   todo: "border-neutral-500",
-  in_progress: "border-blue-300 ",
-  blocked: "border-red-300 ",
-  review: "border-yellow-300 ",
+  in_progress: "border-blue-300",
+  blocked: "border-red-300",
+  review: "border-yellow-300",
   done: "border-green-300",
 };
 
@@ -43,35 +32,19 @@ const COLUMN_HEADER_COLORS = {
 };
 
 function TaskCard({ task, onClick }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: task.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
+  const { ref, isDragging } = useDraggable({ id: task.id });
 
   return (
     <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
+      ref={ref}
       onClick={onClick}
       className="bg-white dark:bg-neutral-700 rounded-xl p-3 shadow-sm cursor-grab active:cursor-grabbing"
+      style={{ opacity: isDragging ? 0.5 : 1 }}
     >
       <p className="text-sm font-bold text-black dark:text-white mb-2">
         {task.title}
       </p>
 
-      {/* Tags */}
       {task.tags?.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-2">
           {task.tags.map((tag) => (
@@ -85,7 +58,6 @@ function TaskCard({ task, onClick }) {
         </div>
       )}
 
-      {/* Footer */}
       <div className="flex items-center justify-between mt-1">
         {task.due_date && (
           <span className="text-xs text-neutral-400">
@@ -94,12 +66,8 @@ function TaskCard({ task, onClick }) {
         )}
         {task.assignee && (
           <img
-            src={
-              task.assignee.image ||
-              `https://ui-avatars.com/api/?name=${task.assignee}&background=0D8ABC&color=fff`
-            }
+            src={`https://ui-avatars.com/api/?name=${task.assignee}&background=0D8ABC&color=fff`}
             className="w-6 h-6 rounded-full"
-            title={task.assignee.name}
           />
         )}
       </div>
@@ -108,17 +76,13 @@ function TaskCard({ task, onClick }) {
 }
 
 function KanbanColumn({ column, tasks, onTaskClick }) {
-  // FIX: useDroppable MUST be inside the component that acts as the drop target
-  const { setNodeRef } = useDroppable({
-    id: column,
-  });
+  const { ref } = useDroppable({ id: column });
 
   return (
     <div
-      ref={setNodeRef} // This tells dnd-kit this div is a drop zone
+      ref={ref}
       className={`rounded-2xl border-2 ${COLUMN_COLORS[column]} p-4 min-h-125 bg-neutral-50/50 dark:bg-neutral-900/20 transition-colors`}
     >
-      {/* Column header */}
       <div className="flex items-center justify-between mb-4">
         <h3
           className={`text-xs font-black uppercase tracking-widest ${COLUMN_HEADER_COLORS[column]}`}
@@ -130,27 +94,20 @@ function KanbanColumn({ column, tasks, onTaskClick }) {
         </span>
       </div>
 
-      {/* Cards Area */}
-      <SortableContext
-        items={tasks.map((t) => t.id)}
-        strategy={verticalListSortingStrategy}
-      >
-        <div className="flex flex-col gap-3">
-          {tasks.map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              onClick={() => onTaskClick(task)}
-            />
-          ))}
-          {/* Visual cue if column is empty */}
-          {tasks.length === 0 && (
-            <div className="h-24 border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded-xl flex items-center justify-center text-neutral-400 text-xs">
-              Drop tasks here
-            </div>
-          )}
-        </div>
-      </SortableContext>
+      <div className="flex flex-col gap-3">
+        {tasks.map((task) => (
+          <TaskCard
+            key={task.id}
+            task={task}
+            onClick={() => onTaskClick(task)}
+          />
+        ))}
+        {tasks.length === 0 && (
+          <div className="h-24 border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded-xl flex items-center justify-center text-neutral-400 text-xs">
+            Drop tasks here
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -158,38 +115,19 @@ function KanbanColumn({ column, tasks, onTaskClick }) {
 export default function KanbanBoard({ tasks, onTasksChange, projectId }) {
   const [selectedTask, setSelectedTask] = useState(null);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5, // Prevents accidental drags when clicking
-      },
-    }),
-  );
-
   const handleDragEnd = async (event) => {
-    const { active, over } = event;
-    if (!over) return;
+    if (event.canceled) return;
 
-    const activeId = active.id;
-    const overId = over.id;
+    const activeId = event.operation.source?.id;
+    const newStatus = event.operation.target?.id;
 
-    // Logic to find if we dropped over a task or a column
+    if (!activeId || !newStatus || !COLUMNS.includes(newStatus)) return;
+
     const draggedTask = tasks.find((t) => t.id === activeId);
-
-    // If dropped on a column, overId is the column name (e.g., 'todo')
-    // If dropped on a task, overId is the task ID.
-    // We need to determine the target status.
-    let newStatus = overId;
-    if (!COLUMNS.includes(overId)) {
-      const targetTask = tasks.find((t) => t.id === overId);
-      newStatus = targetTask ? targetTask.status : draggedTask.status;
-    }
-
     if (!draggedTask || draggedTask.status === newStatus) return;
 
     const originalTasks = [...tasks];
 
-    // Optimistically update UI
     onTasksChange(
       tasks.map((t) => (t.id === activeId ? { ...t, status: newStatus } : t)),
     );
@@ -202,7 +140,7 @@ export default function KanbanBoard({ tasks, onTasksChange, projectId }) {
       await axios.put(`/api/projects/${projectId}/tasks/${activeId}`, {
         ...draggedTask,
         status: newStatus,
-        assigned_to: draggedTask.assigned_to_id || draggedTask.assigned_to, // Ensure ID is sent
+        assigned_to: draggedTask.assigned_to_id || draggedTask.assigned_to,
         tags: tagIds,
       });
     } catch {
@@ -211,11 +149,7 @@ export default function KanbanBoard({ tasks, onTasksChange, projectId }) {
   };
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-    >
+    <DragDropProvider onDragEnd={handleDragEnd}>
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         {COLUMNS.map((col) => (
           <KanbanColumn
@@ -237,6 +171,6 @@ export default function KanbanBoard({ tasks, onTasksChange, projectId }) {
           }}
         />
       )}
-    </DndContext>
+    </DragDropProvider>
   );
 }
