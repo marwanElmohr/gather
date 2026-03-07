@@ -41,6 +41,25 @@ router.post("/", async (req, res) => {
   }
 });
 
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await db.query("SELECT * FROM users WHERE email = $1", [
+      email,
+    ]);
+    if (!user.rows[0])
+      return res.status(404).json({ error: "User not found." });
+    if (user.rows[0].password !== password)
+      return res.status(401).json({ error: "Invalid password." });
+    res.status(200).json({
+      success: "Logged in successfully.",
+      user: user.rows[0],
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Internal Server Error." });
+  }
+});
+
 router.put("/:id", async (req, res) => {
   try {
     const { name, email, password, role } = req.body;

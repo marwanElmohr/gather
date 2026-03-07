@@ -7,7 +7,7 @@ router.get("/:id/tasks", async (req, res) => {
   try {
     const tasks = await db.query(
       `SELECT tasks.*, 
-        users.name AS assigned_to,
+        users.name AS assignee,
         json_agg(
           json_build_object('id', tags.id, 'name', tags.name)
         ) FILTER (WHERE tags.id IS NOT NULL) AS tags
@@ -19,8 +19,7 @@ router.get("/:id/tasks", async (req, res) => {
        GROUP BY tasks.id, users.name`,
       [project_id],
     );
-    if (tasks.rows.length === 0)
-      return res.status(404).json({ error: "There are no tasks yet." });
+    if (tasks.rows.length === 0) return res.json([]);
     res.json(tasks.rows);
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error." });
@@ -105,9 +104,15 @@ router.put("/:id/tasks/:taskId", async (req, res) => {
       assigned_to,
       tags = [],
     } = req.body;
+    let userId = null;
+    if (typeof assigned_to === "object" && assigned_to !== null) {
+      userId = assigned_to.id;
+    } else if (typeof assigned_to === "number") {
+      userId = assigned_to;
+    }
     const task = await db.query(
       "UPDATE tasks SET title=$1, description=$2, due_date=$3, status=$4, priority=$5, assigned_to=$6 WHERE ID=$7 AND project_ID=$8 RETURNING *",
-      [title, description, due_date, status, priority, assigned_to, taskId, id],
+      [title, description, due_date, status, priority, userId, taskId, id],
     );
     if (!task.rows[0])
       return res.status(404).json({ error: "Task not found." });

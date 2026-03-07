@@ -24,14 +24,31 @@ const MoonIcon = () => (
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
     viewBox="0 0 24 24"
-    stroke-width="1.5"
+    strokeWidth="1.5"
     stroke="black"
-    class="size-5"
+    className="size-5"
   >
     <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"
+    />
+  </svg>
+);
+
+const LogoIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={2}
+    stroke="currentColor"
+    className="size-5"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 0 0-1.883 2.542l.857 6a2.25 2.25 0 0 0 2.227 1.932H19.05a2.25 2.25 0 0 0 2.227-1.932l.857-6a2.25 2.25 0 0 0-1.883-2.542m-16.5 0V6A2.25 2.25 0 0 1 6 3.75h3.879a1.5 1.5 0 0 1 1.06.44l2.122 2.12a1.5 1.5 0 0 0 1.06.44H18A2.25 2.25 0 0 1 20.25 9v.776"
     />
   </svg>
 );
@@ -48,8 +65,11 @@ export default function Navbar() {
 
   return (
     <nav className="flex items-center justify-between px-24 py-4 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900">
-      <Link to="/" className="text-xl font-extrabold dark:text-white">
-        MyPM
+      <Link
+        to="/"
+        className="text-xl font-extrabold dark:text-white flex items-center"
+      >
+        <LogoIcon /> MyPM
       </Link>
 
       {user && (
@@ -97,7 +117,7 @@ export default function Navbar() {
                 user.profile_picture ||
                 `https://ui-avatars.com/api/?name=${user.name}&background=0D8ABC&color=fff`
               }
-              className="w-8 h-8 rounded-full border border-blue-500"
+              className="w-8 h-8 rounded-full"
               alt="User"
             />
             <span className="text-sm font-semibold dark:text-white">
@@ -114,13 +134,13 @@ export default function Navbar() {
           <div className="flex items-center gap-2">
             <Link
               to="/login"
-              className="px-4 py-2 text-sm font-bold text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded-lg transition-all"
+              className="px-3 py-2 text-sm font-bold text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded-lg transition-all"
             >
               Login
             </Link>
             <Link
               to="/register"
-              className="px-4 py-2 text-sm font-bold bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-neutral-800  dark:hover:bg-neutral-400 shadow-sm transition-all"
+              className="px-3 py-2 text-sm font-bold bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-neutral-800  dark:hover:bg-neutral-400 shadow-sm transition-all"
             >
               Sign Up
             </Link>

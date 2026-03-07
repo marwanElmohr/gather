@@ -9,10 +9,11 @@ import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import Clients from "./pages/Clients";
 import Users from "./pages/Users";
+import Layout from "./components/Layout";
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
-  return user ? children : <Navigate to="/" />;
+  return user ? <Layout>{children}</Layout> : <Navigate to="/" />;
 }
 
 export default function App() {
