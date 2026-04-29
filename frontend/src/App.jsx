@@ -9,6 +9,8 @@ import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import Clients from "./pages/Clients";
 import Users from "./pages/Users";
+import Orgs from "./pages/Orgs";
+import Room from "./pages/Room";
 import Layout from "./components/Layout";
 
 function ProtectedRoute({ children }) {
@@ -25,6 +27,22 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route
+              path="/orgs"
+              element={
+                <ProtectedRoute>
+                  <Orgs />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/room/:slug/:roomId"
+              element={
+                <ProtectedRoute>
+                  <Room />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/dashboard"
               element={

@@ -5,10 +5,9 @@ import axios from "axios";
 import Navbar from "../components/Navbar";
 
 export default function Register() {
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [role, setRole] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("user");
   const [error, setError] = useState(null);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -16,16 +15,19 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("/api/users/", {
-        name,
-        email,
+      const res = await axios.post("/api/auth/register", {
+        username,
         password,
         role,
       });
-      login(res.data.user);
-      navigate("/dashboard");
+      login(res.data.user, res.data.token);
+      navigate("/orgs");
     } catch (err) {
-      setError("Invalid email or password.");
+      setError(
+        err?.response?.data?.error ||
+          err?.response?.data?.detail ||
+          "Registration failed.",
+      );
     }
   };
 
@@ -44,17 +46,9 @@ export default function Register() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <input
               type="text"
-              placeholder="Full Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="px-4 py-3 rounded-lg border border-neutral-200 dark:border-neutral-600 bg-transparent dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
-              required
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="px-4 py-3 rounded-lg border border-neutral-200 dark:border-neutral-600 bg-transparent dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
               required
             />
@@ -72,9 +66,8 @@ export default function Register() {
               className="px-4 py-3 rounded-lg border border-neutral-200 dark:border-neutral-600 bg-white dark:bg-neutral-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
               required
             >
-              <option value="">Select a role</option>
-              <option value="manager">Manager</option>
-              <option value="member">Member</option>
+              <option value="user">User</option>
+              <option value="organization">Organization</option>
             </select>
             <button
               type="submit"

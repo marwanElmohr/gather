@@ -5,7 +5,7 @@ import axios from "axios";
 import Navbar from "../components/Navbar";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const { login } = useAuth();
@@ -14,11 +14,11 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("/api/users/login", { email, password });
-      login(res.data.user);
-      navigate("/dashboard");
-    } catch (err) {
-      setError("Invalid email or password.");
+      const res = await axios.post("/api/auth/login", { username, password });
+      login(res.data.user, res.data.token);
+      navigate("/orgs");
+    } catch (_err) {
+      setError("Invalid username or password.");
     }
   };
 
@@ -35,11 +35,12 @@ export default function Login() {
           </p>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="px-4 py-3 rounded-lg border border-neutral-200 dark:border-neutral-600 bg-transparent dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+              required
             />
             <input
               type="password"

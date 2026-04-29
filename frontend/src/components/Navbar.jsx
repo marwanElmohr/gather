@@ -81,6 +81,12 @@ export default function Navbar() {
             Dashboard
           </Link>
           <Link
+            to="/orgs"
+            className="text-neutral-600 dark:text-neutral-300 hover:text-neutral-600"
+          >
+            Orgs
+          </Link>
+          <Link
             to="/projects"
             className="text-neutral-600 dark:text-neutral-300 hover:text-neutral-600"
           >
